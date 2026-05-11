@@ -1,47 +1,116 @@
-from modules import launch_utils
+#!/usr/bin/env python3
+"""Main entry point for stable-diffusion-webui.
 
-args = launch_utils.args
-python = launch_utils.python
-git = launch_utils.git
-index_url = launch_utils.index_url
-dir_repos = launch_utils.dir_repos
+This script handles environment preparation, dependency installation,
+and launching the web UI application.
+"""
 
-commit_hash = launch_utils.commit_hash
-git_tag = launch_utils.git_tag
+import os
+import sys
+import importlib.util
+import subprocess
+import argparse
+from pathlib import Path
 
-run = launch_utils.run
-is_installed = launch_utils.is_installed
-repo_dir = launch_utils.repo_dir
+# Minimum required Python version
+PYTHON_MIN_VERSION = (3, 10)
 
-run_pip = launch_utils.run_pip
-check_run_python = launch_utils.check_run_python
-git_clone = launch_utils.git_clone
-git_pull_recursive = launch_utils.git_pull_recursive
-list_extensions = launch_utils.list_extensions
-run_extension_installer = launch_utils.run_extension_installer
-prepare_environment = launch_utils.prepare_environment
-configure_for_tests = launch_utils.configure_for_tests
-start = launch_utils.start
+
+def check_python_version():
+    """Ensure the running Python version meets minimum requirements."""
+    if sys.version_info < PYTHON_MIN_VERSION:
+        print(
+            f"ERROR: Python {PYTHON_MIN_VERSION[0]}.{PYTHON_MIN_VERSION[1]} or higher is required. "
+            f"You are running Python {sys.version_info.major}.{sys.version_info.minor}."
+        )
+        sys.exit(1)
+
+
+def is_installed(package: str) -> bool:
+    """Check whether a Python package is installed."""
+    try:
+        spec = importlib.util.find_spec(package)
+        return spec is not None
+    except ModuleNotFoundError:
+        return False
+
+
+def run_pip(command: str, description: str = ""):
+    """Run a pip command in a subprocess.
+
+    Args:
+        command: The pip arguments string (e.g. 'install torch').
+        description: Human-readable description for logging.
+    """
+    if description:
+        print(f"Installing: {description}")
+
+    result = subprocess.run(
+        [sys.executable, "-m", "pip", *command.split()],
+        capture_output=True,
+        text=True,
+    )
+
+    if result.returncode != 0:
+        print(f"ERROR: Failed to install {description or command}.")
+        print(result.stderr)
+        sys.exit(1)
+
+
+def prepare_environment():
+    """Install or verify core dependencies before launching the app."""
+    requirements_file = Path("requirements.txt")
+
+    if not requirements_file.exists():
+        print("WARNING: requirements.txt not found, skipping dependency check.")
+        return
+
+    print("Checking dependencies...")
+    run_pip(f"install -r {requirements_file}", "requirements from requirements.txt")
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments for the launcher."""
+    parser = argparse.ArgumentParser(
+        description="Launch the Stable Diffusion Web UI",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "--skip-install",
+        action="store_true",
+        default=False,
+        help="Skip automatic installation of dependencies.",
+    )
+    parser.add_argument(
+        "--skip-version-check",
+        action="store_true",
+        default=False,
+        help="Skip Python version check.",
+    )
+    # Pass any remaining arguments through to the main webui module
+    return parser.parse_known_args()
 
 
 def main():
-    if args.dump_sysinfo:
-        filename = launch_utils.dump_sysinfo()
+    """Entry point: validate environment, install deps, and start the UI."""
+    known_args, remaining_args = parse_args()
 
-        print(f"Sysinfo saved as {filename}. Exiting...")
+    if not known_args.skip_version_check:
+        check_python_version()
 
-        exit(0)
+    if not known_args.skip_install:
+        prepare_environment()
 
-    launch_utils.startup_timer.record("initial startup")
+    # Inject remaining CLI args back so webui.py can consume them
+    sys.argv = [sys.argv[0]] + remaining_args
 
-    with launch_utils.startup_timer.subcategory("prepare environment"):
-        if not args.skip_prepare_environment:
-            prepare_environment()
-
-    if args.test_server:
-        configure_for_tests()
-
-    start()
+    # Import and launch the main application
+    try:
+        import webui  # noqa: F401 — imported for its side effects (starts server)
+    except ImportError as exc:
+        print(f"ERROR: Could not import webui module: {exc}")
+        print("Make sure you are running this script from the repository root.")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
