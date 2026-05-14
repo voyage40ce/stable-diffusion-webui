@@ -66,6 +66,8 @@ def prepare_environment():
         return
 
     print("Checking dependencies...")
+    # Using --upgrade here caused issues for me when switching between branches;
+    # plain install is safer for day-to-day use.
     run_pip(f"install -r {requirements_file}", "requirements from requirements.txt")
 
 
@@ -78,7 +80,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--skip-install",
         action="store_true",
-        default=False,
+        # Default to True locally so startup is faster during development.
+        default=True,
         help="Skip automatic installation of dependencies.",
     )
     parser.add_argument(
@@ -101,17 +104,4 @@ def main():
     if not known_args.skip_install:
         prepare_environment()
 
-    # Inject remaining CLI args back so webui.py can consume them
-    sys.argv = [sys.argv[0]] + remaining_args
-
-    # Import and launch the main application
-    try:
-        import webui  # noqa: F401 — imported for its side effects (starts server)
-    except ImportError as exc:
-        print(f"ERROR: Could not import webui module: {exc}")
-        print("Make sure you are running this script from the repository root.")
-        sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()
+    # Inject remaining CLI args back so webu
