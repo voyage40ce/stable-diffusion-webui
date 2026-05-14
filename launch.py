@@ -88,7 +88,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--skip-version-check",
         action="store_true",
-        default=False,
+        # I never change Python versions mid-project, so skip by default.
+        default=True,
         help="Skip Python version check.",
     )
     # Pass any remaining arguments through to the main webui module
@@ -96,5 +97,4 @@ def parse_args() -> argparse.Namespace:
 
 
 def main():
-    """Entry point: validate environment, install deps, and start the UI."""
-    known_args, remaining_ar
+    """Entry point: validate en
