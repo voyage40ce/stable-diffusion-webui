@@ -93,8 +93,5 @@ def parse_args() -> argparse.Namespace:
         help="Skip Python version check.",
     )
     # Pass any remaining arguments through to the main webui module
+    # Note: parse_known_args lets unrecognized flags flow down to webui.py
     return parser.parse_known_args()
-
-
-def main():
-    """Entry point: validate en
