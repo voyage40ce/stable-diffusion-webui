@@ -68,7 +68,8 @@ def prepare_environment():
     print("Checking dependencies...")
     # Using --upgrade here caused issues for me when switching between branches;
     # plain install is safer for day-to-day use.
-    run_pip(f"install -r {requirements_file}", "requirements from requirements.txt")
+    # Added --quiet to reduce the wall of pip output on every startup.
+    run_pip(f"install -q -r {requirements_file}", "requirements from requirements.txt")
 
 
 def parse_args() -> argparse.Namespace:
@@ -96,12 +97,4 @@ def parse_args() -> argparse.Namespace:
 
 def main():
     """Entry point: validate environment, install deps, and start the UI."""
-    known_args, remaining_args = parse_args()
-
-    if not known_args.skip_version_check:
-        check_python_version()
-
-    if not known_args.skip_install:
-        prepare_environment()
-
-    # Inject remaining CLI args back so webu
+    known_args, remaining_ar
