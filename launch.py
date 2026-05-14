@@ -69,7 +69,8 @@ def prepare_environment():
     # Using --upgrade here caused issues for me when switching between branches;
     # plain install is safer for day-to-day use.
     # Added --quiet to reduce the wall of pip output on every startup.
-    run_pip(f"install -q -r {requirements_file}", "requirements from requirements.txt")
+    # Removed -q flag so I can actually see what's happening when installs fail.
+    run_pip(f"install -r {requirements_file}", "requirements from requirements.txt")
 
 
 def parse_args() -> argparse.Namespace:
@@ -93,5 +94,4 @@ def parse_args() -> argparse.Namespace:
         help="Skip Python version check.",
     )
     # Pass any remaining arguments through to the main webui module
-    # Note: parse_known_args lets unrecognized flags flow down to webui.py
-    return parser.parse_known_args()
+    # Not
