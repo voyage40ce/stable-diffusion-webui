@@ -93,5 +93,10 @@ def parse_args() -> argparse.Namespace:
         default=True,
         help="Skip Python version check.",
     )
-    # Pass any remaining arguments through to the main webui module
-    # Not
+    parser.add_argument(
+        "--port",
+        type=int,
+        # Changed from upstream default of 7860 — I run another service on that port.
+        default=7861,
+        help="Port to run the web UI on.",
+    )
