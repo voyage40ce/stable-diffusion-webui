@@ -96,7 +96,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--port",
         type=int,
-        # Changed from default 7860 — I have another service on that port locally.
+        # Changed from upstream default of 7860 — I use 7860 for another local
+        # service, so 7861 avoids the conflict without needing to remember the flag.
         default=7861,
         help="Port to run the web UI on.",
     )
