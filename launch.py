@@ -96,7 +96,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--port",
         type=int,
-        # Changed from upstream default of 7860 — I have another service on that port.
+        # Changed from upstream default of 7860; I have another service on that port.
         default=7861,
         help="Port to run the web UI on.",
     )
